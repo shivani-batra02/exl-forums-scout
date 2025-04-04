@@ -12,6 +12,13 @@ import hashlib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables from .env file if it exists
+env_path = Path('.') / '.env'
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
 
 class EmailSender:
     """Email sender class for the AEM Forms Question Scraper"""
@@ -37,6 +44,11 @@ class EmailSender:
         
         self.password = password or os.environ.get("AEM_EMAIL_PASSWORD")
         self.use_ssl = use_ssl or os.environ.get("AEM_USE_SSL", "").lower() == "true"
+        
+        # Get report title from environment variable with fallback
+        self.report_title = os.environ.get("AEM_REPORT_TITLE", 
+            "Adobe Experience League Forums: Unresolved Questions")
+        logging.info(f"Loaded report title from environment: '{self.report_title}'")
         
         # Get recipients (comma-separated lists in env vars)
         self._parse_recipients()
@@ -101,7 +113,7 @@ class EmailSender:
             </head>
             <body>
                 <div class="container">
-                    <h1>AEM Forms Unanswered Questions Report</h1>
+                    <h1>{self.report_title}</h1>
                     <p>Report generated on: {now}</p>
                     <p>Found {len(questions)} unanswered questions since {start_date}</p>
         """
@@ -146,8 +158,8 @@ class EmailSender:
         # Add footer matching the structure of the working email
         html += """
                     <div class="footer">
-                        <p>This is an automated report from the AEM Forms Question Scraper.</p>
-                        <p>For questions or issues, please contact the administrator.</p>
+                        <p>EXL Forums Scout is custom tool developed by AEM Forms Content Experience team to improve response rate on AEM Forms Forums.</p>
+                        <p>If you have any query write to khsingh@adobe.com</p>
                     </div>
                 </div>
             </body>
@@ -195,8 +207,8 @@ class EmailSender:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         random_hash = hashlib.md5(timestamp.encode()).hexdigest()[:5]
         
-        # Format: "AEM Forms Forums: Unanswered Questions (count) [date-hash]"
-        subject = f"AEM Forms Forums: Unanswered Questions ({len(questions)}) [{current_date}-{random_hash}]"
+        # Format: "Report Title (count) [date-hash]"
+        subject = f"{self.report_title} ({len(questions)}) [{current_date}-{random_hash}]"
         msg["Subject"] = subject
         logging.info(f"Using dynamic subject: {subject}")
         
@@ -229,7 +241,7 @@ class EmailSender:
         # Create plain text version first (will be shown if HTML fails)
         plain_text = f"""
 FROM: {from_name}
-SUBJECT: AEM Forms Forums: Unanswered Questions
+SUBJECT: {self.report_title}
 
 Report Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 Questions Since: {start_date}
@@ -247,7 +259,8 @@ Report ID: {random_hash}
                 date = question.get("date", "Unknown Date")
                 plain_text += f"{idx}. {title}\n   By: {author} on {date}\n   URL: {url}\n\n"
                 
-        plain_text += "This is an automated report from the AEM Forms Question Scraper."
+        plain_text += "EXL Forums Scout is custom tool developed by AEM Forms Content Experience team to improve response rate on AEM Forms Forums.\n"
+        plain_text += "If you have any query write to khsingh@adobe.com\n"
         
         # Attach plain text part first (fallback)
         text_part = MIMEText(plain_text, "plain")

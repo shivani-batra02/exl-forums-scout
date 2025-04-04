@@ -9,6 +9,13 @@ import logging
 import json
 import requests
 from datetime import datetime
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables from .env file if it exists
+env_path = Path('.') / '.env'
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
 
 class SlackSender:
     """Slack notification sender for the AEM Forms Question Scraper"""
@@ -17,6 +24,10 @@ class SlackSender:
         """Initialize the Slack sender with API token and channel."""
         self.token = token or os.environ.get("AEM_SLACK_TOKEN")
         self.channel = channel or os.environ.get("AEM_SLACK_CHANNEL", "general")
+        
+        # Get report title from environment variable with fallback
+        self.report_title = os.environ.get("AEM_REPORT_TITLE", 
+            "Adobe Experience League Forums: Unresolved Questions")
         
         # Validate required settings
         self._validate_settings()
@@ -43,7 +54,7 @@ class SlackSender:
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": "AEM Forms Unanswered Questions Report",
+                    "text": self.report_title,
                     "emoji": True
                 }
             },
@@ -144,7 +155,7 @@ class SlackSender:
         # Create the message payload
         data = {
             "channel": self.channel,
-            "text": f"AEM Forms Unanswered Questions Report - Found {len(questions)} questions since {start_date}",
+            "text": f"{self.report_title} - Found {len(questions)} questions since {start_date}",
             "blocks": blocks
         }
         
