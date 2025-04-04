@@ -98,8 +98,8 @@ class SlackSender:
             for i, question in enumerate(questions[:display_count]):
                 title = question.get("title", "Untitled Question")
                 url = question.get("url", "#")
-                author = question.get("author", "Unknown Author")
                 date = question.get("date", "Unknown Date")
+                replies = question.get("replies", 0)
                 
                 # Calculate age in days
                 try:
@@ -117,7 +117,7 @@ class SlackSender:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*<{url}|{title}>*\nAge: {age_text}"
+                        "text": f"*<{url}|{title}>*\nAge: {age_text} | Replies: {replies}"
                     }
                 })
                 

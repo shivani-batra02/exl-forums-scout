@@ -129,6 +129,7 @@ class EmailSender:
                         <tr>
                             <th>Age</th>
                             <th>Title</th>
+                            <th>Replies</th>
                         </tr>
             """
             
@@ -137,6 +138,7 @@ class EmailSender:
                 title = question.get("title", "Untitled Question")
                 url = question.get("url", "#")
                 date = question.get("date", "Unknown Date")
+                replies = question.get("replies", 0)
                 
                 # Calculate age in days
                 try:
@@ -154,6 +156,7 @@ class EmailSender:
                         <tr style="{row_style}">
                             <td>{age_text}</td>
                             <td><a class="question-link" href="{url}">{title}</a></td>
+                            <td>{replies}</td>
                         </tr>
                 """
             
