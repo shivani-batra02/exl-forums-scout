@@ -127,27 +127,33 @@ class EmailSender:
                     <h2>Questions</h2>
                     <table>
                         <tr>
-                            <th>ID</th>
+                            <th>Age</th>
                             <th>Title</th>
-                            <th>Author</th>
-                            <th>Date</th>
                         </tr>
             """
             
             # Add each question to the email
             for question in questions:
-                question_id = question.get("id", "N/A")
                 title = question.get("title", "Untitled Question")
                 url = question.get("url", "#")
-                author = question.get("author", "Unknown Author")
                 date = question.get("date", "Unknown Date")
                 
+                # Calculate age in days
+                try:
+                    logging.info(f"Attempting to parse date: {date}")
+                    question_date = datetime.strptime(date, "%Y-%m-%d")
+                    age_days = (datetime.now() - question_date).days
+                    age_text = f"{age_days} days"
+                    row_style = 'color: red;' if age_days > 3 else ''
+                except Exception as e:
+                    logging.error(f"Failed to parse date '{date}': {str(e)}")
+                    age_text = "Unknown"
+                    row_style = ''
+                
                 html += f"""
-                        <tr>
-                            <td>{question_id}</td>
+                        <tr style="{row_style}">
+                            <td>{age_text}</td>
                             <td><a class="question-link" href="{url}">{title}</a></td>
-                            <td>{author}</td>
-                            <td>{date}</td>
                         </tr>
                 """
             
@@ -255,9 +261,8 @@ Report ID: {random_hash}
             for idx, question in enumerate(questions, 1):
                 title = question.get("title", "Untitled Question")
                 url = question.get("url", "#")
-                author = question.get("author", "Unknown Author")
                 date = question.get("date", "Unknown Date")
-                plain_text += f"{idx}. {title}\n   By: {author} on {date}\n   URL: {url}\n\n"
+                plain_text += f"{idx}. {title}\n   Date: {date}\n   URL: {url}\n\n"
                 
         plain_text += "EXL Forums Scout is custom tool developed by AEM Forms Content Experience team to improve response rate on AEM Forms Forums.\n"
         plain_text += "If you have any query write to khsingh@adobe.com\n"

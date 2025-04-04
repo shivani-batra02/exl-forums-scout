@@ -100,13 +100,24 @@ class SlackSender:
                 url = question.get("url", "#")
                 author = question.get("author", "Unknown Author")
                 date = question.get("date", "Unknown Date")
-                question_id = question.get("id", "N/A")
+                
+                # Calculate age in days
+                try:
+                    logging.info(f"Attempting to parse date: {date}")
+                    question_date = datetime.strptime(date, "%Y-%m-%d")
+                    age_days = (datetime.now() - question_date).days
+                    age_text = f"{age_days} days"
+                    color = "danger" if age_days > 3 else "good"
+                except Exception as e:
+                    logging.error(f"Failed to parse date '{date}': {str(e)}")
+                    age_text = "Unknown"
+                    color = "good"
                 
                 blocks.append({
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*<{url}|{title}>*\nBy: {author} on {date}\nID: {question_id}"
+                        "text": f"*<{url}|{title}>*\nAge: {age_text}"
                     }
                 })
                 
